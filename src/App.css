@@ -1,0 +1,86 @@
+:root {
+  /* Color Variables */
+  --color-bg-light: #f0f0f0;
+  --color-bg-medium: #e0e0e0;
+  --color-text-primary: black;
+  --color-text-secondary: #333;
+}
+
+body {
+  margin: 0;
+}
+
+nav {
+  width: 100%;
+  background-color: var(--color-bg-light);
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em 0;
+}
+
+nav > div {
+  display: flex;
+  flex-direction: column;
+}
+
+nav > div > a {
+  color: var(--color-text-primary);
+  font-weight: bold;
+  font-size: 1.5em;
+  line-height: 0em;
+  padding: 1em;
+  text-align: center;
+}
+
+@media (min-width: 600px) {
+  nav {
+    flex-direction: row;
+  }
+
+  nav > div {
+    flex-direction: row;
+  }
+}
+
+main {
+  margin-bottom: 5em;
+}
+
+.centered-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  width: 100%;
+  max-width: 60em;
+  flex-wrap: wrap;
+}
+
+.add-button {
+  padding: 0.75em 1.5em;
+  font-size: 1em;
+  font-weight: bold;
+  border: none;
+  border-radius: 0.5em;
+  background-color: var(--color-bg-light);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.add-button:hover {
+  opacity: 0.8;
+}

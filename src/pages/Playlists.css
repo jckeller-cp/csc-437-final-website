@@ -1,0 +1,43 @@
+#playlists-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#playlists-page > h1 {
+  font-size: 3em;
+}
+
+.playlists-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.playlist-card {
+  background-color: var(--color-bg-light);
+  padding: 1em;
+  margin: 1em;
+  border-radius: 0.5em;
+  width: 80vw;
+  max-width: 30em;
+  text-align: center;
+}
+
+.playlist-card h2 {
+  font-size: 2em;
+  margin: 0;
+}
+
+.playlist-card p {
+  font-size: 1.2em;
+}
+
+.playlist-card h2 a {
+  color: var(--color-text-primary);
+}

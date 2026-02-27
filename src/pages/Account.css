@@ -1,0 +1,49 @@
+#account-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+#account-page > h1 {
+  font-size: 3em;
+}
+
+#account-page h2 {
+  font-size: 2em;
+  margin: 0.5em;
+}
+
+#account-page section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.profile-info dt {
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.profile-info dd {
+  margin: 0;
+  margin-bottom: 0.7em;
+}
+
+.actions-section button {
+  padding: 0.5em 1em;
+  font-size: 1em;
+  border: none;
+  border-radius: 0.5em;
+  background-color: var(--color-bg-light);
+  cursor: pointer;
+}

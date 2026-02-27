@@ -1,0 +1,99 @@
+#welcome-banner {
+  width: 100%;
+  padding: 1em 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg-medium);
+}
+
+#welcome-banner > h1 {
+  font-size: 3em;
+  margin: 0.5em;
+  text-align: center;
+}
+
+#welcome-banner > p {
+  font-size: 1.5em;
+  margin: 0.5em;
+  text-align: center;
+}
+
+#quick-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#quick-stats > h2 {
+  font-size: 2em;
+  margin: 0.5em;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 1em;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background-color: var(--color-bg-light);
+  padding: 1em;
+  margin: 1em;
+  border-radius: 0.5em;
+  min-width: 10em;
+  text-align: center;
+}
+
+.stat-card > strong {
+  display: block;
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+#recent-setlists {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#recent-setlists > h2 {
+  font-size: 2em;
+  margin: 0.5em;
+}
+
+.home-setlist-list {
+  display: flex;
+  gap: 2em;
+  flex-wrap: wrap;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+}
+
+.home-setlist-card {
+  background-color: var(--color-bg-light);
+  padding: 1em;
+  margin: 1em;
+  border-radius: 0.5em;
+  width: 80vw;
+  max-width: 20em;
+  text-align: center;
+}
+
+.home-setlist-name {
+  display: block;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  color: var(--color-text-primary);
+}
+
+.home-setlist-location {
+  font-size: 1em;
+  color: var(--color-text-secondary);
+}
