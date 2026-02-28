@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { dummyPlaylists } from "../data/dummyData";
 import "./Playlists.css";
 import Modal from "../components/Modal";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 function AddPlaylistButton({ onClick }) {
   return (
@@ -15,9 +15,20 @@ function AddPlaylistButton({ onClick }) {
 function AddPlaylistForm({ onNewPlaylist }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [errors, setErrors] = useState({});
 
-  function handleSubmit() {
-    if (name.trim() === "" || description.trim() === "") {
+  const nameRef = useRef(null);
+  const descriptionRef = useRef(null);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const newErrors = {};
+    if (name.trim() === "") newErrors.name = "Name is required.";
+    if (description.trim() === "") newErrors.description = "Description is required.";
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      if (newErrors.name) nameRef.current.focus();
+      else if (newErrors.description) descriptionRef.current.focus();
       return;
     }
     onNewPlaylist({ name, description });
@@ -26,26 +37,34 @@ function AddPlaylistForm({ onNewPlaylist }) {
   }
 
   return (
-    <form className="add-playlist-form" onSubmit={handleSubmit}>
+    <form className="add-playlist-form" onSubmit={handleSubmit} noValidate>
+      {errors.name && (
+        <p id="playlist-name-error" className="form-error">{errors.name}</p>
+      )}
       <label>
         Name
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          required
           placeholder="Enter playlist name"
-          aria-label="Playlist Name"
+          ref={nameRef}
+          aria-invalid={!!errors.name}
+          aria-describedby={errors.name ? "playlist-name-error" : undefined}
         />
       </label>
+      {errors.description && (
+        <p id="playlist-description-error" className="form-error">{errors.description}</p>
+      )}
       <label>
         Description
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          required
           placeholder="Enter playlist description"
-          aria-label="Playlist Description"
+          ref={descriptionRef}
+          aria-invalid={!!errors.description}
+          aria-describedby={errors.description ? "playlist-description-error" : undefined}
         />
       </label>
       <button type="submit">Create Playlist</button>

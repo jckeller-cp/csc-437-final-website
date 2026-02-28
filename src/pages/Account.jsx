@@ -5,7 +5,7 @@ import { useState, useRef } from "react";
 
 function isValidEmail(stringToTest) {
   const emailRegex =
-    /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_'+\-]@([a-z0-9][a-z0-9-]*\.)+[a-z]{2,}$/i;
+    /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-.]*)[a-z0-9_'+-]@([a-z0-9][a-z0-9-]*\.)+[a-z]{2,}$/i;
   // Regex from https://colinhacks.com/essays/reasonable-email-regex
   return emailRegex.test(stringToTest);
 }

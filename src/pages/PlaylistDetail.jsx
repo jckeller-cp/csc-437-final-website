@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { dummyPlaylists } from "../data/dummyData";
 import "./PlaylistDetail.css";
 import Modal from "../components/Modal";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 function AddSongButton({ onClick }) {
   return (
@@ -26,16 +26,33 @@ function AddSongForm({ onNewSong }) {
   const [duration, setDuration] = useState("");
   const [bpm, setBpm] = useState("");
   const [key, setKey] = useState("");
+  const [errors, setErrors] = useState({});
+
+  const titleRef = useRef(null);
+  const artistRef = useRef(null);
+  const durationRef = useRef(null);
+  const bpmRef = useRef(null);
+  const keyRef = useRef(null);
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (
-      title.trim() === "" ||
-      artist.trim() === "" ||
-      duration.trim() === "" ||
-      bpm.trim() === "" ||
-      key.trim() === ""
-    ) {
+    const newErrors = {};
+    if (title.trim() === "") newErrors.title = "Title is required.";
+    if (artist.trim() === "") newErrors.artist = "Artist is required.";
+    if (duration.trim() === "") newErrors.duration = "Duration is required.";
+    if (bpm.trim() === "") {
+      newErrors.bpm = "BPM is required.";
+    } else if (Number(bpm) <= 0) {
+      newErrors.bpm = "BPM must be a positive number.";
+    }
+    if (key.trim() === "") newErrors.key = "Key is required.";
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      if (newErrors.title) titleRef.current.focus();
+      else if (newErrors.artist) artistRef.current.focus();
+      else if (newErrors.duration) durationRef.current.focus();
+      else if (newErrors.bpm) bpmRef.current.focus();
+      else if (newErrors.key) keyRef.current.focus();
       return;
     }
     onNewSong({ title, artist, duration, bpm: Number(bpm), key });
@@ -47,61 +64,81 @@ function AddSongForm({ onNewSong }) {
   }
 
   return (
-    <form className="add-song-form" onSubmit={handleSubmit}>
+    <form className="add-song-form" onSubmit={handleSubmit} noValidate>
+      {errors.title && (
+        <p id="song-title-error" className="form-error">{errors.title}</p>
+      )}
       <label>
         Title
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          required
           placeholder="Enter song title"
-          aria-label="Song Title"
+          ref={titleRef}
+          aria-invalid={!!errors.title}
+          aria-describedby={errors.title ? "song-title-error" : undefined}
         />
       </label>
+      {errors.artist && (
+        <p id="song-artist-error" className="form-error">{errors.artist}</p>
+      )}
       <label>
         Artist
         <input
           type="text"
           value={artist}
           onChange={(e) => setArtist(e.target.value)}
-          required
           placeholder="Enter artist name"
-          aria-label="Artist"
+          ref={artistRef}
+          aria-invalid={!!errors.artist}
+          aria-describedby={errors.artist ? "song-artist-error" : undefined}
         />
       </label>
+      {errors.duration && (
+        <p id="song-duration-error" className="form-error">{errors.duration}</p>
+      )}
       <label>
         Duration
         <input
           type="text"
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
-          required
           placeholder="e.g. 3:45"
-          aria-label="Duration"
+          ref={durationRef}
+          aria-invalid={!!errors.duration}
+          aria-describedby={errors.duration ? "song-duration-error" : undefined}
         />
       </label>
+      {errors.bpm && (
+        <p id="song-bpm-error" className="form-error">{errors.bpm}</p>
+      )}
       <label>
         BPM
         <input
           type="number"
           value={bpm}
           onChange={(e) => setBpm(e.target.value)}
-          required
           placeholder="e.g. 120"
-          aria-label="BPM"
           min="1"
+          ref={bpmRef}
+          aria-invalid={!!errors.bpm}
+          aria-describedby={errors.bpm ? "song-bpm-error" : undefined}
         />
       </label>
+      {errors.key && (
+        <p id="song-key-error" className="form-error">{errors.key}</p>
+      )}
       <label>
         Key
         <input
           type="text"
           value={key}
           onChange={(e) => setKey(e.target.value)}
-          required
           placeholder="e.g. C Major"
-          aria-label="Key"
+          ref={keyRef}
+          aria-invalid={!!errors.key}
+          aria-describedby={errors.key ? "song-key-error" : undefined}
         />
       </label>
       <button type="submit" className="submit-button">

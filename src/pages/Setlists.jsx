@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { dummySetlists, dummyPlaylists } from "../data/dummyData";
 import "./Setlists.css";
 import Modal from "../components/Modal";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 function AddSetlistButton({ onClick }) {
   return (
@@ -20,15 +20,26 @@ function AddSetlistForm({ onNewSetlist }) {
   const [playlistId, setPlaylistId] = useState(
     dummyPlaylists.length > 0 ? dummyPlaylists[0].id : "",
   );
+  const [errors, setErrors] = useState({});
+
+  const nameRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const venueRef = useRef(null);
+  const dateRef = useRef(null);
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (
-      name.trim() === "" ||
-      description.trim() === "" ||
-      venue.trim() === "" ||
-      date.trim() === ""
-    ) {
+    const newErrors = {};
+    if (name.trim() === "") newErrors.name = "Name is required.";
+    if (description.trim() === "") newErrors.description = "Description is required.";
+    if (venue.trim() === "") newErrors.venue = "Venue is required.";
+    if (date.trim() === "") newErrors.date = "Date is required.";
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      if (newErrors.name) nameRef.current.focus();
+      else if (newErrors.description) descriptionRef.current.focus();
+      else if (newErrors.venue) venueRef.current.focus();
+      else if (newErrors.date) dateRef.current.focus();
       return;
     }
     onNewSetlist({
@@ -46,47 +57,63 @@ function AddSetlistForm({ onNewSetlist }) {
   }
 
   return (
-    <form className="add-setlist-form" onSubmit={handleSubmit}>
+    <form className="add-setlist-form" onSubmit={handleSubmit} noValidate>
+      {errors.name && (
+        <p id="setlist-name-error" className="form-error">{errors.name}</p>
+      )}
       <label>
         Name
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          required
           placeholder="Enter setlist name"
-          aria-label="Setlist Name"
+          ref={nameRef}
+          aria-invalid={!!errors.name}
+          aria-describedby={errors.name ? "setlist-name-error" : undefined}
         />
       </label>
+      {errors.description && (
+        <p id="setlist-description-error" className="form-error">{errors.description}</p>
+      )}
       <label>
         Description
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          required
           placeholder="Enter setlist description"
-          aria-label="Setlist Description"
+          ref={descriptionRef}
+          aria-invalid={!!errors.description}
+          aria-describedby={errors.description ? "setlist-description-error" : undefined}
         />
       </label>
+      {errors.venue && (
+        <p id="setlist-venue-error" className="form-error">{errors.venue}</p>
+      )}
       <label>
         Venue
         <input
           type="text"
           value={venue}
           onChange={(e) => setVenue(e.target.value)}
-          required
           placeholder="Enter venue name"
-          aria-label="Venue"
+          ref={venueRef}
+          aria-invalid={!!errors.venue}
+          aria-describedby={errors.venue ? "setlist-venue-error" : undefined}
         />
       </label>
+      {errors.date && (
+        <p id="setlist-date-error" className="form-error">{errors.date}</p>
+      )}
       <label>
         Date
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          required
-          aria-label="Date"
+          ref={dateRef}
+          aria-invalid={!!errors.date}
+          aria-describedby={errors.date ? "setlist-date-error" : undefined}
         />
       </label>
       <label>
