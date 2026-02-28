@@ -1,86 +1,124 @@
 :root {
-  /* Color Variables */
-  --color-bg-light: #f0f0f0;
-  --color-bg-medium: #e0e0e0;
-  --color-text-primary: black;
-  --color-text-secondary: #333;
+    /* Color Variables */
+    --color-bg-light: #f0f0f0;
+    --color-bg-medium: #e0e0e0;
+    --color-text-primary: black;
+    --color-text-secondary: #333;
 }
 
 body {
-  margin: 0;
+    margin: 0;
 }
 
 nav {
-  width: 100%;
-  background-color: var(--color-bg-light);
+    width: 100%;
+    background-color: var(--color-bg-light);
 }
 
 nav {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1em 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1em 0;
 }
 
 nav > div {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 
 nav > div > a {
-  color: var(--color-text-primary);
-  font-weight: bold;
-  font-size: 1.5em;
-  line-height: 0em;
-  padding: 1em;
-  text-align: center;
+    color: var(--color-text-primary);
+    font-weight: bold;
+    font-size: 1.5em;
+    line-height: 0em;
+    padding: 1em;
+    text-align: center;
 }
 
 @media (min-width: 600px) {
-  nav {
-    flex-direction: row;
-  }
+    nav {
+        flex-direction: row;
+    }
 
-  nav > div {
-    flex-direction: row;
-  }
+    nav > div {
+        flex-direction: row;
+    }
 }
 
 main {
-  margin-bottom: 5em;
+    margin-bottom: 5em;
 }
 
 .centered-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .page-header {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1em;
-  width: 100%;
-  max-width: 60em;
-  flex-wrap: wrap;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1em;
+    width: 100%;
+    max-width: 60em;
+    flex-wrap: wrap;
 }
 
 .add-button {
-  padding: 0.75em 1.5em;
-  font-size: 1em;
-  font-weight: bold;
-  border: none;
-  border-radius: 0.5em;
-  background-color: var(--color-bg-light);
-  color: var(--color-text-primary);
-  cursor: pointer;
-  transition: opacity 0.2s;
+    padding: 0.75em 1.5em;
+    font-size: 1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 0.5em;
+    background-color: var(--color-bg-light);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: opacity 0.2s;
 }
 
 .add-button:hover {
-  opacity: 0.8;
+    opacity: 0.8;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    margin: 1em;
+}
+
+form label {
+    font-size: 1em;
+    display: flex;
+    flex-direction: column;
+}
+
+form input {
+    padding: 0.5em;
+    font-size: 1.5em;
+}
+
+form textarea {
+    padding: 0.5em;
+    font-size: 1.2em;
+    resize: vertical;
+}
+
+form button {
+    padding: 0.5em 1em;
+    font-size: 1em;
+    border: 2px solid var(--color-text-secondary);
+    border-radius: 0.5em;
+    background-color: white;
+    cursor: pointer;
+}
+
+form select {
+    padding: 0.5em;
+    font-size: 1.2em;
 }
