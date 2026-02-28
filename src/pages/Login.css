@@ -1,0 +1,19 @@
+#login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+}
+
+.login-card {
+    background-color: var(--color-bg-light);
+    padding: 2em;
+    border-radius: 1em;
+    width: 100%;
+    max-width: 24em;
+}
+
+.login-card h1 {
+    margin-top: 0;
+    text-align: center;
+}

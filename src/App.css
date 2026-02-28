@@ -58,6 +58,10 @@ nav > div > a {
     }
 }
 
+.account-links {
+    margin-right: 1em;
+}
+
 .dark-mode-toggle {
     padding: 0.4em 0.9em;
     font-size: 1em;
@@ -164,4 +168,16 @@ form button {
 form select {
     padding: 0.5em;
     font-size: 1.2em;
+}
+
+form input[aria-invalid="true"],
+form textarea[aria-invalid="true"],
+form select[aria-invalid="true"] {
+    border-color: var(--color-text-negative);
+}
+
+.form-error {
+    color: var(--color-text-negative);
+    font-size: 0.9em;
+    margin: 0;
 }
