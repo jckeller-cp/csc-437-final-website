@@ -2,6 +2,26 @@ import { Link } from "react-router-dom";
 import { playlists, setlists } from "../data/dummyData";
 import "./Home.css";
 
+function StatCard({ title, value }) {
+  return (
+    <div className="stat-card">
+      <strong>{value}</strong>
+      <span>{title}</span>
+    </div>
+  );
+}
+
+function HomeSetlistCard({ setlist }) {
+  return (
+    <li key={setlist.id} className="home-setlist-card">
+      <Link className="home-setlist-name" to={`/setlists/${setlist.id}`}>
+        {setlist.name}
+      </Link>
+      <span className="home-setlist-location">{setlist.venue}</span>
+    </li>
+  );
+}
+
 function Home() {
   return (
     <div className="centered-content">
@@ -13,20 +33,12 @@ function Home() {
       <section id="quick-stats">
         <h2>Quick Stats</h2>
         <div className="stats">
-          <div className="stat-card">
-            <strong>{playlists.length}</strong>
-            <span>Playlists</span>
-          </div>
-          <div className="stat-card">
-            <strong>{setlists.length}</strong>
-            <span>Setlists</span>
-          </div>
-          <div className="stat-card">
-            <strong>
-              {playlists.reduce((sum, p) => sum + p.songs.length, 0)}
-            </strong>
-            <span>Total Songs</span>
-          </div>
+          <StatCard title="Playlists" value={playlists.length} />
+          <StatCard title="Setlists" value={setlists.length} />
+          <StatCard
+            title="Total Songs"
+            value={playlists.reduce((sum, p) => sum + p.songs.length, 0)}
+          />
         </div>
       </section>
 
@@ -34,15 +46,7 @@ function Home() {
         <h2>Recent Setlists</h2>
         <ul className="home-setlist-list">
           {setlists.map((setlist) => (
-            <li key={setlist.id} className="home-setlist-card">
-              <Link
-                className="home-setlist-name"
-                to={`/setlists/${setlist.id}`}
-              >
-                {setlist.name}
-              </Link>
-              <span className="home-setlist-location">{setlist.venue}</span>
-            </li>
+            <HomeSetlistCard key={setlist.id} setlist={setlist} />
           ))}
         </ul>
       </section>

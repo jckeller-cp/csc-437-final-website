@@ -2,6 +2,31 @@ import { Link } from "react-router-dom";
 import { setlists, playlists } from "../data/dummyData";
 import "./Setlists.css";
 
+function AddSetlistButton({ onClick }) {
+  return (
+    <button className="add-button" onClick={onClick}>
+      + New Setlist
+    </button>
+  );
+}
+
+function SetlistCard({ setlist, playlistName }) {
+  return (
+    <div className="setlist-card">
+      <h2>
+        <Link to={`/setlists/${setlist.id}`}>{setlist.name}</Link>
+      </h2>
+      <p>{setlist.description}</p>
+      <div className="setlist-meta">
+        <span>📍 {setlist.venue}</span>
+        <span>📅 {setlist.date}</span>
+        <span>🎵 From: {playlistName}</span>
+        <span>{setlist.songs.length} songs</span>
+      </div>
+    </div>
+  );
+}
+
 function Setlists() {
   const getPlaylistName = (playlistId) => {
     const playlist = playlists.find((p) => p.id === playlistId);
@@ -16,24 +41,16 @@ function Setlists() {
     <div id="setlists-page">
       <div className="page-header">
         <h1>Setlists</h1>
-        <button className="add-button" onClick={handleAddSetlist}>
-          + New Setlist
-        </button>
+        <AddSetlistButton onClick={handleAddSetlist} />
       </div>
+
       <div className="setlists-list">
         {setlists.map((setlist) => (
-          <div key={setlist.id} className="setlist-card">
-            <h2>
-              <Link to={`/setlists/${setlist.id}`}>{setlist.name}</Link>
-            </h2>
-            <p>{setlist.description}</p>
-            <div className="setlist-meta">
-              <span>📍 {setlist.venue}</span>
-              <span>📅 {setlist.date}</span>
-              <span>🎵 From: {getPlaylistName(setlist.playlistId)}</span>
-              <span>{setlist.songs.length} songs</span>
-            </div>
-          </div>
+          <SetlistCard
+            key={setlist.id}
+            setlist={setlist}
+            playlistName={getPlaylistName(setlist.playlistId)}
+          />
         ))}
       </div>
     </div>

@@ -2,6 +2,49 @@ import { useParams, Link } from "react-router-dom";
 import { setlists, playlists } from "../data/dummyData";
 import "./SetlistDetail.css";
 
+function SetlistInfo({ setlist, playlist }) {
+  return (
+    <div className="setlist-info">
+      <p>
+        <strong>Venue:</strong> {setlist.venue}
+      </p>
+      <p>
+        <strong>Date:</strong> {setlist.date}
+      </p>
+      <p>
+        <strong>Source Playlist:</strong>{" "}
+        <Link to={`/playlists/${setlist.playlistId}`}>{playlist?.name}</Link>
+      </p>
+    </div>
+  );
+}
+
+function AddSongButton({ onClick }) {
+  return (
+    <button className="add-button" onClick={onClick}>
+      + Add Song
+    </button>
+  );
+}
+
+function SongCard({ song, index, notes }) {
+  return (
+    <li className="song-card">
+      <div className="song-number">{index + 1}</div>
+      <div className="song-details">
+        <h3 className="song-title">{song.title}</h3>
+        <p className="song-artist">{song.artist}</p>
+        {notes && <p className="song-notes">{notes}</p>}
+      </div>
+      <div className="song-metadata">
+        <span className="song-duration">{song.duration}</span>
+        <span className="song-bpm">{song.bpm} BPM</span>
+        <span className="song-key">{song.key}</span>
+      </div>
+    </li>
+  );
+}
+
 function SetlistDetail() {
   const { id } = useParams();
   const setlist = setlists.find((s) => s.id === parseInt(id));
@@ -31,42 +74,23 @@ function SetlistDetail() {
       <h1>{setlist.name}</h1>
       <p>{setlist.description}</p>
 
-      <div className="setlist-info">
-        <p>
-          <strong>Venue:</strong> {setlist.venue}
-        </p>
-        <p>
-          <strong>Date:</strong> {setlist.date}
-        </p>
-        <p>
-          <strong>Source Playlist:</strong>{" "}
-          <Link to={`/playlists/${setlist.playlistId}`}>{playlist?.name}</Link>
-        </p>
-      </div>
+      <SetlistInfo setlist={setlist} playlist={playlist} />
 
       <div className="page-header">
         <h2>Songs ({setlist.songs.length})</h2>
-        <button className="add-button" onClick={handleAddSong}>
-          + Add Song
-        </button>
+        <AddSongButton onClick={handleAddSong} />
       </div>
+
       <ul className="songs-list">
         {setlist.songs.map((item, index) => {
           const song = getSongDetails(item.songId);
           return song ? (
-            <li key={item.songId} className="song-card">
-              <div className="song-number">{index + 1}</div>
-              <div className="song-details">
-                <h3 className="song-title">{song.title}</h3>
-                <p className="song-artist">{song.artist}</p>
-                {item.notes && <p className="song-notes">{item.notes}</p>}
-              </div>
-              <div className="song-metadata">
-                <span className="song-duration">{song.duration}</span>
-                <span className="song-bpm">{song.bpm} BPM</span>
-                <span className="song-key">{song.key}</span>
-              </div>
-            </li>
+            <SongCard
+              key={item.songId}
+              song={song}
+              index={index}
+              notes={item.notes}
+            />
           ) : null;
         })}
       </ul>
