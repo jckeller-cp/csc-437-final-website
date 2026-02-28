@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import "./App.css";
 import Home from "./pages/Home";
 import Playlists from "./pages/Playlists";
@@ -8,6 +9,15 @@ import PlaylistDetail from "./pages/PlaylistDetail";
 import SetlistDetail from "./pages/SetlistDetail";
 
 function App() {
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem("darkMode") === "true"
+  );
+
+  useEffect(() => {
+    document.body.classList.toggle("dark-mode", darkMode);
+    localStorage.setItem("darkMode", darkMode);
+  }, [darkMode]);
+
   return (
     <Router>
       <div className="app">
@@ -19,6 +29,13 @@ function App() {
               <Link to="/setlists">Setlists</Link>
             </div>
             <div className="account-links">
+              <button
+                className="dark-mode-toggle"
+                onClick={() => setDarkMode((prev) => !prev)}
+                aria-label="Toggle dark mode"
+              >
+                {darkMode ? "Light Mode" : "Dark Mode"}
+              </button>
               <Link to="/account">Account</Link>
             </div>
           </nav>

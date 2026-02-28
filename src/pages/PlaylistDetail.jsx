@@ -6,7 +6,7 @@ import { useState } from "react";
 
 function AddSongButton({ onClick }) {
   return (
-    <button className="add-button" onClick={onClick}>
+    <button className="neutral-button" onClick={onClick}>
       + Add Song
     </button>
   );
@@ -14,7 +14,7 @@ function AddSongButton({ onClick }) {
 
 function DeletePlaylistButton({ onClick }) {
   return (
-    <button className="delete-button" onClick={onClick}>
+    <button className="bad-button" onClick={onClick}>
       Delete Playlist
     </button>
   );
@@ -124,7 +124,7 @@ function SongCard({ song, index, onDelete }) {
         <span className="song-bpm">{song.bpm} BPM</span>
         <span className="song-key">{song.key}</span>
       </div>
-      <button className="delete-button" onClick={onDelete}>
+      <button className="bad-button" onClick={onDelete}>
         Delete
       </button>
     </li>
@@ -146,7 +146,10 @@ function PlaylistDetail() {
   };
 
   const deleteSong = (songId) => {
-    setPlaylist({ ...playlist, songs: playlist.songs.filter((s) => s.id !== songId) });
+    setPlaylist({
+      ...playlist,
+      songs: playlist.songs.filter((s) => s.id !== songId),
+    });
   };
 
   const addSong = (newSong) => {
@@ -189,7 +192,12 @@ function PlaylistDetail() {
 
       <ul className="songs-list">
         {playlist.songs.map((song, index) => (
-          <SongCard key={song.id} song={song} index={index} onDelete={() => deleteSong(song.id)} />
+          <SongCard
+            key={song.id}
+            song={song}
+            index={index}
+            onDelete={() => deleteSong(song.id)}
+          />
         ))}
       </ul>
     </div>

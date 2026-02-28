@@ -6,7 +6,7 @@ import { useState } from "react";
 
 function AddSetlistButton({ onClick }) {
   return (
-    <button className="add-button" onClick={onClick}>
+    <button className="neutral-button" onClick={onClick}>
       + New Setlist
     </button>
   );

@@ -23,7 +23,7 @@ function SetlistInfo({ setlist, playlist }) {
 
 function AddSongButton({ onClick }) {
   return (
-    <button className="add-button" onClick={onClick}>
+    <button className="neutral-button" onClick={onClick}>
       + Add Song
     </button>
   );
@@ -93,7 +93,7 @@ function SongCard({ song, index, notes, onDelete }) {
         <span className="song-bpm">{song.bpm} BPM</span>
         <span className="song-key">{song.key}</span>
       </div>
-      <button className="delete-button" onClick={onDelete}>
+      <button className="bad-button" onClick={onDelete}>
         Delete
       </button>
     </li>

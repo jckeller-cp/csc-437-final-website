@@ -46,9 +46,9 @@ function Account() {
 
       <section className="actions-section">
         <h2>Account Actions</h2>
-        <button>Edit Profile</button>
-        <button>Change Password</button>
-        <button>Log Out</button>
+        <button className="neutral-button">Edit Profile</button>
+        <button className="neutral-button">Change Password</button>
+        <button className="bad-button">Log Out</button>
       </section>
     </div>
   );
