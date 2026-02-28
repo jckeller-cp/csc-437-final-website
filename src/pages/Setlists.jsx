@@ -18,7 +18,7 @@ function AddSetlistForm({ onNewSetlist }) {
   const [venue, setVenue] = useState("");
   const [date, setDate] = useState("");
   const [playlistId, setPlaylistId] = useState(
-    dummyPlaylists.length > 0 ? dummyPlaylists[0].id : ""
+    dummyPlaylists.length > 0 ? dummyPlaylists[0].id : "",
   );
 
   function handleSubmit(e) {
@@ -31,7 +31,13 @@ function AddSetlistForm({ onNewSetlist }) {
     ) {
       return;
     }
-    onNewSetlist({ name, description, venue, date, playlistId: Number(playlistId) });
+    onNewSetlist({
+      name,
+      description,
+      venue,
+      date,
+      playlistId: Number(playlistId),
+    });
     setName("");
     setDescription("");
     setVenue("");
@@ -97,9 +103,7 @@ function AddSetlistForm({ onNewSetlist }) {
           ))}
         </select>
       </label>
-      <button type="submit" className="submit-button">
-        Create Setlist
-      </button>
+      <button type="submit">Create Setlist</button>
     </form>
   );
 }

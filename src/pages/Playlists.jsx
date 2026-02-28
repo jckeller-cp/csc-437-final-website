@@ -48,9 +48,7 @@ function AddPlaylistForm({ onNewPlaylist }) {
           aria-label="Playlist Description"
         />
       </label>
-      <button type="submit" className="submit-button">
-        Create Playlist
-      </button>
+      <button type="submit">Create Playlist</button>
     </form>
   );
 }

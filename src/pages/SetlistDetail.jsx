@@ -1,6 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { dummySetlists, dummyPlaylists } from "../data/dummyData";
 import "./SetlistDetail.css";
+import Modal from "../components/Modal";
+import { useState } from "react";
 
 function SetlistInfo({ setlist, playlist }) {
   return (
@@ -27,7 +29,57 @@ function AddSongButton({ onClick }) {
   );
 }
 
-function SongCard({ song, index, notes }) {
+function AddSongForm({ playlistSongs, onNewSong }) {
+  const [songId, setSongId] = useState(
+    playlistSongs.length > 0 ? playlistSongs[0].id : "",
+  );
+  const [notes, setNotes] = useState("");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!songId) return;
+    onNewSong({ songId: Number(songId), notes });
+    setSongId(playlistSongs.length > 0 ? playlistSongs[0].id : "");
+    setNotes("");
+  }
+
+  if (playlistSongs.length === 0) {
+    return <p>There are no songs in this playlist.</p>;
+  }
+
+  return (
+    <form className="add-song-form" onSubmit={handleSubmit}>
+      <label>
+        Song
+        <select
+          value={songId}
+          onChange={(e) => setSongId(e.target.value)}
+          aria-label="Song"
+        >
+          {playlistSongs.map((song) => (
+            <option key={song.id} value={song.id}>
+              {song.title} - {song.artist}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Notes
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Enter performance notes (optional)"
+          aria-label="Notes"
+        />
+      </label>
+      <button type="submit" className="submit-button">
+        Add Song
+      </button>
+    </form>
+  );
+}
+
+function SongCard({ song, index, notes, onDelete }) {
   return (
     <li className="song-card">
       <div className="song-number">{index + 1}</div>
@@ -41,17 +93,18 @@ function SongCard({ song, index, notes }) {
         <span className="song-bpm">{song.bpm} BPM</span>
         <span className="song-key">{song.key}</span>
       </div>
+      <button className="delete-button" onClick={onDelete}>
+        Delete
+      </button>
     </li>
   );
 }
 
 function SetlistDetail() {
   const { id } = useParams();
-  const setlist = dummySetlists.find((s) => s.id === parseInt(id));
-
-  const handleAddSong = () => {
-    alert("Add song to setlist functionality would go here");
-  };
+  const initialSetlist = dummySetlists.find((s) => s.id === parseInt(id));
+  const [setlist, setSetlist] = useState(initialSetlist);
+  const [addSongOpen, setAddSongOpen] = useState(false);
 
   if (!setlist) {
     return (
@@ -69,8 +122,35 @@ function SetlistDetail() {
     return playlist.songs.find((s) => s.id === songId);
   };
 
+  const handleOpenModal = () => {
+    setAddSongOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setAddSongOpen(false);
+  };
+
+  const addSong = (newItem) => {
+    setSetlist({ ...setlist, songs: [...setlist.songs, newItem] });
+    handleCloseModal();
+  };
+
+  const deleteSong = (songId) => {
+    setSetlist({
+      ...setlist,
+      songs: setlist.songs.filter((item) => item.songId !== songId),
+    });
+  };
+
   return (
     <div id="setlist-detail-page">
+      <Modal
+        isOpen={addSongOpen}
+        title="Add Song"
+        onCloseRequested={handleCloseModal}
+      >
+        <AddSongForm playlistSongs={playlist.songs} onNewSong={addSong} />
+      </Modal>
       <h1>{setlist.name}</h1>
       <p>{setlist.description}</p>
 
@@ -78,7 +158,7 @@ function SetlistDetail() {
 
       <div className="page-header">
         <h2>Songs ({setlist.songs.length})</h2>
-        <AddSongButton onClick={handleAddSong} />
+        <AddSongButton onClick={handleOpenModal} />
       </div>
 
       <ul className="songs-list">
@@ -90,6 +170,7 @@ function SetlistDetail() {
               song={song}
               index={index}
               notes={item.notes}
+              onDelete={() => deleteSong(item.songId)}
             />
           ) : null;
         })}

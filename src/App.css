@@ -85,6 +85,22 @@ main {
     opacity: 0.8;
 }
 
+.delete-button {
+    padding: 0.5em 1em;
+    margin-top: 0.5em;
+    font-size: 0.9em;
+    border: 2px solid red;
+    border-radius: 0.5em;
+    background-color: var(--color-bg-light);
+    color: red;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.delete-button:hover {
+    opacity: 0.8;
+}
+
 form {
     display: flex;
     flex-direction: column;
