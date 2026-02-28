@@ -1,50 +1,50 @@
 #setlists-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 #setlists-page > h1 {
-  font-size: 3em;
+    font-size: 3em;
 }
 
 .setlists-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  justify-content: center;
-  list-style: none;
-  padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
 }
 
 .setlist-card {
-  background-color: var(--color-bg-light);
-  padding: 1em;
-  margin: 1em;
-  border-radius: 0.5em;
-  width: 80vw;
-  max-width: 30em;
-  text-align: center;
+    background-color: var(--color-bg-light);
+    padding: 1em;
+    margin: 1em;
+    border-radius: 0.5em;
+    width: 80vw;
+    max-width: 30em;
+    text-align: center;
 }
 
 .setlist-card h2 {
-  font-size: 2em;
-  margin: 0;
+    font-size: 2em;
+    margin: 0;
 }
 
 .setlist-card p {
-  font-size: 1.2em;
+    font-size: 1.2em;
 }
 
 .setlist-card h2 a {
-  color: var(--color-text-primary);
+    color: var(--color-text-primary);
 }
 
 .setlist-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  font-size: 1em;
-  color: var(--color-text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    font-size: 1em;
+    color: var(--color-text-secondary);
 }

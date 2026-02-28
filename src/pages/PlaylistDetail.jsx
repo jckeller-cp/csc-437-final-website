@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { playlists } from "../data/dummyData";
+import { dummyPlaylists } from "../data/dummyData";
 import "./PlaylistDetail.css";
 
 function AddSongButton({ onClick }) {
@@ -29,7 +29,7 @@ function SongCard({ song, index }) {
 
 function PlaylistDetail() {
   const { id } = useParams();
-  const playlist = playlists.find((p) => p.id === parseInt(id));
+  const playlist = dummyPlaylists.find((p) => p.id === parseInt(id));
 
   const handleAddSong = () => {
     alert("Add song functionality would go here");

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { setlists, playlists } from "../data/dummyData";
+import { dummySetlists, dummyPlaylists } from "../data/dummyData";
 import "./Setlists.css";
+import { useState } from "react";
 
 function AddSetlistButton({ onClick }) {
   return (
@@ -28,8 +29,10 @@ function SetlistCard({ setlist, playlistName }) {
 }
 
 function Setlists() {
+  const [setlists, setSetlists] = useState(dummySetlists);
+
   const getPlaylistName = (playlistId) => {
-    const playlist = playlists.find((p) => p.id === playlistId);
+    const playlist = dummyPlaylists.find((p) => p.id === playlistId);
     return playlist ? playlist.name : "Unknown Playlist";
   };
 

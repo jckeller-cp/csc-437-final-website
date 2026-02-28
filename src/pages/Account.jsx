@@ -1,4 +1,5 @@
 import "./Account.css";
+import StatCard from "../components/StatCard";
 
 function ProfileInfo({ user }) {
   return (
@@ -12,15 +13,6 @@ function ProfileInfo({ user }) {
       <dt>Member Since:</dt>
       <dd>{user.memberSince}</dd>
     </dl>
-  );
-}
-
-function StatsCard({ title, value }) {
-  return (
-    <div className="stat-card">
-      <strong>{value}</strong>
-      <span>{title}</span>
-    </div>
   );
 }
 
@@ -47,8 +39,8 @@ function Account() {
       <section className="stats-section">
         <h2>Your Stats</h2>
         <div className="stats">
-          <StatsCard title="Playlists Created" value={user.totalPlaylists} />
-          <StatsCard title="Setlists Created" value={user.totalSetlists} />
+          <StatCard title="Playlists Created" value={user.totalPlaylists} />
+          <StatCard title="Setlists Created" value={user.totalSetlists} />
         </div>
       </section>
 

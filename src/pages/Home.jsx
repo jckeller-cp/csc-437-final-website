@@ -1,15 +1,7 @@
 import { Link } from "react-router-dom";
-import { playlists, setlists } from "../data/dummyData";
+import { dummyPlaylists, dummySetlists } from "../data/dummyData";
 import "./Home.css";
-
-function StatCard({ title, value }) {
-  return (
-    <div className="stat-card">
-      <strong>{value}</strong>
-      <span>{title}</span>
-    </div>
-  );
-}
+import StatCard from "../components/StatCard";
 
 function HomeSetlistCard({ setlist }) {
   return (
@@ -23,6 +15,9 @@ function HomeSetlistCard({ setlist }) {
 }
 
 function Home() {
+  const playlists = dummyPlaylists;
+  const setlists = dummySetlists;
+
   return (
     <div className="centered-content">
       <div id="welcome-banner">

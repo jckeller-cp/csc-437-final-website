@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { setlists, playlists } from "../data/dummyData";
+import { dummySetlists, dummyPlaylists } from "../data/dummyData";
 import "./SetlistDetail.css";
 
 function SetlistInfo({ setlist, playlist }) {
@@ -47,7 +47,7 @@ function SongCard({ song, index, notes }) {
 
 function SetlistDetail() {
   const { id } = useParams();
-  const setlist = setlists.find((s) => s.id === parseInt(id));
+  const setlist = dummySetlists.find((s) => s.id === parseInt(id));
 
   const handleAddSong = () => {
     alert("Add song to setlist functionality would go here");
@@ -62,7 +62,7 @@ function SetlistDetail() {
     );
   }
 
-  const playlist = playlists.find((p) => p.id === setlist.playlistId);
+  const playlist = dummyPlaylists.find((p) => p.id === setlist.playlistId);
 
   const getSongDetails = (songId) => {
     if (!playlist) return null;
