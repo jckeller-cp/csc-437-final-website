@@ -203,20 +203,6 @@ function PlaylistDetail({ authToken }) {
       .catch((err) => setError(err.message));
   }, [playlistId, authToken]);
 
-  const patchSongs = (updatedSongs) => {
-    return fetch(`/api/playlists/${playlistId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`,
-      },
-      body: JSON.stringify({ songs: updatedSongs }),
-    }).then((res) => {
-      if (!res.ok) throw new Error("Failed to update songs");
-      setPlaylist((prev) => ({ ...prev, songs: updatedSongs }));
-    });
-  };
-
   const handleOpenModal = () => {
     setSubmitError(null);
     setAddSongOpen(true);
@@ -227,7 +213,17 @@ function PlaylistDetail({ authToken }) {
     setSubmitError(null);
     startTransition(async () => {
       try {
-        await patchSongs([...playlist.songs, newSong]);
+        const res = await fetch(`/api/playlists/${playlistId}/songs`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(newSong),
+        });
+        if (!res.ok) throw new Error("Failed to add song");
+        const created = await res.json();
+        setPlaylist((prev) => ({ ...prev, songs: [...prev.songs, created] }));
         handleCloseModal();
       } catch (err) {
         setSubmitError(err.message);
@@ -238,8 +234,17 @@ function PlaylistDetail({ authToken }) {
   const deleteSong = (index) => {
     setActionError(null);
     setDeletingIndex(index);
-    const updatedSongs = playlist.songs.filter((_, i) => i !== index);
-    patchSongs(updatedSongs)
+    fetch(`/api/playlists/${playlistId}/songs/${index}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to delete song");
+        setPlaylist((prev) => ({
+          ...prev,
+          songs: prev.songs.filter((_, i) => i !== index),
+        }));
+      })
       .catch((err) => setActionError(err.message))
       .finally(() => setDeletingIndex(null));
   };

@@ -106,6 +106,110 @@ export function registerPlaylistRoutes(app, playlistProvider, setlistProvider) {
     }
   });
 
+  app.post("/api/playlists/:playlistId/songs", async (req, res) => {
+    const { playlistId } = req.params;
+    const { title, artist, duration, bpm, key } = req.body;
+
+    const { username } = req.userInfo || {};
+    if (!username) {
+      res.status(401).send({
+        error: "Unauthorized",
+        message: "Authentication required to edit playlists",
+      });
+      return;
+    }
+
+    if (!ObjectId.isValid(playlistId)) {
+      res.status(400).send({
+        error: "Bad Request",
+        message: "Invalid playlist ID",
+      });
+      return;
+    }
+
+    const existing = await playlistProvider.getPlaylistById(
+      new ObjectId(playlistId),
+    );
+    if (!existing) {
+      res.status(404).send({
+        error: "Not Found",
+        message: "No playlist with that ID",
+      });
+      return;
+    }
+    if (existing.authorId !== username) {
+      res.status(403).send({
+        error: "Forbidden",
+        message: "This user does not own this playlist",
+      });
+      return;
+    }
+
+    const song = { title, artist, duration, bpm, key };
+    await playlistProvider.addSong(new ObjectId(playlistId), song);
+    res.status(201).json(song);
+  });
+
+  app.delete("/api/playlists/:playlistId/songs/:songIndex", async (req, res) => {
+    const { playlistId, songIndex } = req.params;
+    const index = Number(songIndex);
+
+    const { username } = req.userInfo || {};
+    if (!username) {
+      res.status(401).send({
+        error: "Unauthorized",
+        message: "Authentication required to edit playlists",
+      });
+      return;
+    }
+
+    if (!ObjectId.isValid(playlistId)) {
+      res.status(400).send({
+        error: "Bad Request",
+        message: "Invalid playlist ID",
+      });
+      return;
+    }
+
+    if (!Number.isInteger(index) || index < 0) {
+      res.status(400).send({
+        error: "Bad Request",
+        message: "Invalid song index",
+      });
+      return;
+    }
+
+    const existing = await playlistProvider.getPlaylistById(
+      new ObjectId(playlistId),
+    );
+    if (!existing) {
+      res.status(404).send({
+        error: "Not Found",
+        message: "No playlist with that ID",
+      });
+      return;
+    }
+    if (existing.authorId !== username) {
+      res.status(403).send({
+        error: "Forbidden",
+        message: "This user does not own this playlist",
+      });
+      return;
+    }
+
+    if (index >= existing.songs.length) {
+      res.status(404).send({
+        error: "Not Found",
+        message: "No song at that index",
+      });
+      return;
+    }
+
+    await playlistProvider.removeSong(new ObjectId(playlistId), index);
+    await setlistProvider.adjustSongIndicesAfterRemoval(playlistId, index);
+    res.status(204).send();
+  });
+
   app.post("/api/playlists", async (req, res) => {
     const { name, description } = req.body;
 

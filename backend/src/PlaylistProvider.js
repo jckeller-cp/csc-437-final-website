@@ -29,6 +29,27 @@ export class PlaylistProvider {
       .then((result) => ({ ...newPlaylist, _id: result.insertedId }));
   }
 
+  async addSong(playlistId, song) {
+    const result = await this.collection.updateOne(
+      { _id: playlistId },
+      { $push: { songs: song } },
+    );
+    return result.matchedCount > 0;
+  }
+
+  async removeSong(playlistId, songIndex) {
+    const playlist = await this.getPlaylistById(playlistId);
+    if (!playlist || songIndex < 0 || songIndex >= playlist.songs.length) {
+      return false;
+    }
+    const updatedSongs = playlist.songs.filter((_, i) => i !== songIndex);
+    await this.collection.updateOne(
+      { _id: playlistId },
+      { $set: { songs: updatedSongs } },
+    );
+    return true;
+  }
+
   deletePlaylist(playlistId) {
     return this.collection
       .deleteOne({ _id: playlistId })

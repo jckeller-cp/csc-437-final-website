@@ -42,6 +42,31 @@ export class SetlistProvider {
       .then((result) => result.deletedCount > 0);
   }
 
+  async adjustSongIndicesAfterRemoval(playlistId, removedIndex) {
+    const setlists = await this.collection
+      .find({ playlistId })
+      .toArray();
+
+    const updates = setlists.map((setlist) => {
+      const updatedSongs = setlist.songs
+        .filter((item) => item.songIndex !== removedIndex)
+        .map((item) => ({
+          ...item,
+          songIndex:
+            item.songIndex > removedIndex
+              ? item.songIndex - 1
+              : item.songIndex,
+        }));
+
+      return this.collection.updateOne(
+        { _id: setlist._id },
+        { $set: { songs: updatedSongs } },
+      );
+    });
+
+    return Promise.all(updates);
+  }
+
   deleteSetlistsByPlaylistId(playlistId) {
     return this.collection.deleteMany({ playlistId });
   }
