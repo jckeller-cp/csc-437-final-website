@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
-import { dummySetlists, dummyPlaylists } from "../data/dummyData";
 import "./Setlists.css";
 import Modal from "../components/Modal";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 
 function AddSetlistButton({ onClick }) {
   return (
@@ -12,13 +11,13 @@ function AddSetlistButton({ onClick }) {
   );
 }
 
-function AddSetlistForm({ onNewSetlist }) {
+function AddSetlistForm({ onNewSetlist, playlists, isPending }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [venue, setVenue] = useState("");
   const [date, setDate] = useState("");
   const [playlistId, setPlaylistId] = useState(
-    dummyPlaylists.length > 0 ? dummyPlaylists[0].id : "",
+    playlists.length > 0 ? playlists[0]._id : "",
   );
   const [errors, setErrors] = useState({});
 
@@ -42,18 +41,12 @@ function AddSetlistForm({ onNewSetlist }) {
       else if (newErrors.date) dateRef.current.focus();
       return;
     }
-    onNewSetlist({
-      name,
-      description,
-      venue,
-      date,
-      playlistId: Number(playlistId),
-    });
+    onNewSetlist({ name, description, venue, date, playlistId });
     setName("");
     setDescription("");
     setVenue("");
     setDate("");
-    setPlaylistId(dummyPlaylists.length > 0 ? dummyPlaylists[0].id : "");
+    setPlaylistId(playlists.length > 0 ? playlists[0]._id : "");
   }
 
   return (
@@ -71,6 +64,7 @@ function AddSetlistForm({ onNewSetlist }) {
           ref={nameRef}
           aria-invalid={!!errors.name}
           aria-describedby={errors.name ? "setlist-name-error" : undefined}
+          disabled={isPending}
         />
       </label>
       {errors.description && (
@@ -85,6 +79,7 @@ function AddSetlistForm({ onNewSetlist }) {
           ref={descriptionRef}
           aria-invalid={!!errors.description}
           aria-describedby={errors.description ? "setlist-description-error" : undefined}
+          disabled={isPending}
         />
       </label>
       {errors.venue && (
@@ -100,6 +95,7 @@ function AddSetlistForm({ onNewSetlist }) {
           ref={venueRef}
           aria-invalid={!!errors.venue}
           aria-describedby={errors.venue ? "setlist-venue-error" : undefined}
+          disabled={isPending}
         />
       </label>
       {errors.date && (
@@ -114,6 +110,7 @@ function AddSetlistForm({ onNewSetlist }) {
           ref={dateRef}
           aria-invalid={!!errors.date}
           aria-describedby={errors.date ? "setlist-date-error" : undefined}
+          disabled={isPending}
         />
       </label>
       <label>
@@ -122,15 +119,18 @@ function AddSetlistForm({ onNewSetlist }) {
           value={playlistId}
           onChange={(e) => setPlaylistId(e.target.value)}
           aria-label="Playlist"
+          disabled={isPending}
         >
-          {dummyPlaylists.map((playlist) => (
-            <option key={playlist.id} value={playlist.id}>
+          {playlists.map((playlist) => (
+            <option key={playlist._id} value={playlist._id}>
               {playlist.name}
             </option>
           ))}
         </select>
       </label>
-      <button type="submit">Create Setlist</button>
+      <button type="submit" disabled={isPending}>
+        {isPending ? "Creating..." : "Create Setlist"}
+      </button>
     </form>
   );
 }
@@ -139,43 +139,63 @@ function SetlistCard({ setlist, playlistName }) {
   return (
     <div className="setlist-card">
       <h2>
-        <Link to={`/setlists/${setlist.id}`}>{setlist.name}</Link>
+        <Link to={`/setlists/${setlist._id}`}>{setlist.name}</Link>
       </h2>
       <p>{setlist.description}</p>
       <div className="setlist-meta">
-        <span>📍 {setlist.venue}</span>
-        <span>📅 {setlist.date}</span>
-        <span>🎵 From: {playlistName}</span>
+        <span>{setlist.venue}</span>
+        <span>{setlist.date}</span>
+        <span>From: {playlistName}</span>
         <span>{setlist.songs.length} songs</span>
       </div>
     </div>
   );
 }
 
-function Setlists() {
-  const [setlists, setSetlists] = useState(dummySetlists);
+function Setlists({ authToken }) {
+  const [setlists, setSetlists] = useState(null);
+  const [playlists, setPlaylists] = useState(null);
   const [addSetlistOpen, setAddSetlistOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const headers = { Authorization: `Bearer ${authToken}` };
+    Promise.all([
+      fetch("/api/setlists", { headers }).then((res) => res.json()),
+      fetch("/api/playlists", { headers }).then((res) => res.json()),
+    ]).then(([setlistData, playlistData]) => {
+      setSetlists(setlistData);
+      setPlaylists(playlistData);
+    });
+  }, [authToken]);
 
   const getPlaylistName = (playlistId) => {
-    const playlist = dummyPlaylists.find((p) => p.id === playlistId);
+    const playlist = playlists.find((p) => p._id === playlistId);
     return playlist ? playlist.name : "Unknown Playlist";
   };
 
-  const handleOpenModal = () => {
-    setAddSetlistOpen(true);
+  const handleOpenModal = () => setAddSetlistOpen(true);
+  const handleCloseModal = () => setAddSetlistOpen(false);
+
+  const addSetlist = ({ name, description, venue, date, playlistId }) => {
+    startTransition(async () => {
+      const res = await fetch("/api/setlists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ name, description, venue, date, playlistId }),
+      });
+      const created = await res.json();
+      setSetlists((prev) => [...prev, created]);
+      handleCloseModal();
+    });
   };
 
-  const handleCloseModal = () => {
-    setAddSetlistOpen(false);
-  };
-
-  const addSetlist = (newSetlist) => {
-    const newId =
-      setlists.length > 0 ? setlists[setlists.length - 1].id + 1 : 1;
-    const setlistToAdd = { id: newId, songs: [], ...newSetlist };
-    setSetlists([...setlists, setlistToAdd]);
-    handleCloseModal();
-  };
+  if (setlists === null || playlists === null) {
+    return <p>Loading setlists...</p>;
+  }
 
   return (
     <div id="setlists-page">
@@ -184,7 +204,11 @@ function Setlists() {
         title="New Setlist"
         onCloseRequested={handleCloseModal}
       >
-        <AddSetlistForm onNewSetlist={addSetlist} />
+        <AddSetlistForm
+          onNewSetlist={addSetlist}
+          playlists={playlists}
+          isPending={isPending}
+        />
       </Modal>
       <div className="page-header">
         <h1>Setlists</h1>
@@ -194,7 +218,7 @@ function Setlists() {
       <div className="setlists-list">
         {setlists.map((setlist) => (
           <SetlistCard
-            key={setlist.id}
+            key={setlist._id}
             setlist={setlist}
             playlistName={getPlaylistName(setlist.playlistId)}
           />

@@ -1,8 +1,7 @@
-import { useParams, Link } from "react-router-dom";
-import { dummySetlists, dummyPlaylists } from "../data/dummyData";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import "./SetlistDetail.css";
 import Modal from "../components/Modal";
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 
 function SetlistInfo({ setlist, playlist }) {
   return (
@@ -29,17 +28,25 @@ function AddSongButton({ onClick }) {
   );
 }
 
-function AddSongForm({ playlistSongs, onNewSong }) {
-  const [songId, setSongId] = useState(
-    playlistSongs.length > 0 ? playlistSongs[0].id : "",
+function DeleteSetlistButton({ onClick, isDeleting }) {
+  return (
+    <button className="bad-button" onClick={onClick} disabled={isDeleting}>
+      {isDeleting ? "Deleting..." : "Delete Setlist"}
+    </button>
+  );
+}
+
+function AddSongForm({ playlistSongs, onNewSong, isPending }) {
+  const [songIndex, setSongIndex] = useState(
+    playlistSongs.length > 0 ? "0" : "",
   );
   const [notes, setNotes] = useState("");
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (!songId) return;
-    onNewSong({ songId: Number(songId), notes });
-    setSongId(playlistSongs.length > 0 ? playlistSongs[0].id : "");
+    if (songIndex === "") return;
+    onNewSong({ songIndex: Number(songIndex), notes });
+    setSongIndex(playlistSongs.length > 0 ? "0" : "");
     setNotes("");
   }
 
@@ -52,12 +59,13 @@ function AddSongForm({ playlistSongs, onNewSong }) {
       <label>
         Song
         <select
-          value={songId}
-          onChange={(e) => setSongId(e.target.value)}
+          value={songIndex}
+          onChange={(e) => setSongIndex(e.target.value)}
           aria-label="Song"
+          disabled={isPending}
         >
-          {playlistSongs.map((song) => (
-            <option key={song.id} value={song.id}>
+          {playlistSongs.map((song, index) => (
+            <option key={index} value={index}>
               {song.title} - {song.artist}
             </option>
           ))}
@@ -70,16 +78,17 @@ function AddSongForm({ playlistSongs, onNewSong }) {
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Enter performance notes (optional)"
           aria-label="Notes"
+          disabled={isPending}
         />
       </label>
-      <button type="submit" className="submit-button">
-        Add Song
+      <button type="submit" className="submit-button" disabled={isPending}>
+        {isPending ? "Adding..." : "Add Song"}
       </button>
     </form>
   );
 }
 
-function SongCard({ song, index, notes, onDelete }) {
+function SongCard({ song, index, notes, onDelete, isDeleting }) {
   return (
     <li className="song-card">
       <div className="song-number">{index + 1}</div>
@@ -93,20 +102,82 @@ function SongCard({ song, index, notes, onDelete }) {
         <span className="song-bpm">{song.bpm} BPM</span>
         <span className="song-key">{song.key}</span>
       </div>
-      <button className="bad-button" onClick={onDelete}>
-        Delete
+      <button className="bad-button" onClick={onDelete} disabled={isDeleting}>
+        {isDeleting ? "Deleting..." : "Delete"}
       </button>
     </li>
   );
 }
 
-function SetlistDetail() {
-  const { id } = useParams();
-  const initialSetlist = dummySetlists.find((s) => s.id === parseInt(id));
-  const [setlist, setSetlist] = useState(initialSetlist);
+function SetlistDetail({ authToken }) {
+  const { setlistId } = useParams();
+  const [setlist, setSetlist] = useState(null);
+  const [playlist, setPlaylist] = useState(null);
   const [addSongOpen, setAddSongOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [deletingIndex, setDeletingIndex] = useState(null);
+  const [isDeletingSetlist, setIsDeletingSetlist] = useState(false);
+  const navigate = useNavigate();
 
-  if (!setlist) {
+  useEffect(() => {
+    fetch(`/api/setlists/${setlistId}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+      .then((res) => (res.ok ? res.json() : false))
+      .then((data) => {
+        setSetlist(data);
+        if (data && data.playlistId) {
+          fetch(`/api/playlists/${data.playlistId}`, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((playlistData) => setPlaylist(playlistData));
+        }
+      });
+  }, [setlistId, authToken]);
+
+  const patchSongs = (updatedSongs) => {
+    return fetch(`/api/setlists/${setlistId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ songs: updatedSongs }),
+    }).then((res) => {
+      if (res.ok) setSetlist((prev) => ({ ...prev, songs: updatedSongs }));
+    });
+  };
+
+  const handleOpenModal = () => setAddSongOpen(true);
+  const handleCloseModal = () => setAddSongOpen(false);
+
+  const addSong = (newItem) => {
+    startTransition(async () => {
+      await patchSongs([...setlist.songs, newItem]);
+      handleCloseModal();
+    });
+  };
+
+  const deleteSong = (index) => {
+    setDeletingIndex(index);
+    const updatedSongs = setlist.songs.filter((_, i) => i !== index);
+    patchSongs(updatedSongs).finally(() => setDeletingIndex(null));
+  };
+
+  const deleteSetlist = () => {
+    setIsDeletingSetlist(true);
+    fetch(`/api/setlists/${setlistId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${authToken}` },
+    }).then(() => navigate("/setlists"));
+  };
+
+  if (setlist === null) {
+    return <p>Loading setlist...</p>;
+  }
+
+  if (setlist === false) {
     return (
       <div>
         <h2>Setlist Not Found</h2>
@@ -115,32 +186,7 @@ function SetlistDetail() {
     );
   }
 
-  const playlist = dummyPlaylists.find((p) => p.id === setlist.playlistId);
-
-  const getSongDetails = (songId) => {
-    if (!playlist) return null;
-    return playlist.songs.find((s) => s.id === songId);
-  };
-
-  const handleOpenModal = () => {
-    setAddSongOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setAddSongOpen(false);
-  };
-
-  const addSong = (newItem) => {
-    setSetlist({ ...setlist, songs: [...setlist.songs, newItem] });
-    handleCloseModal();
-  };
-
-  const deleteSong = (songId) => {
-    setSetlist({
-      ...setlist,
-      songs: setlist.songs.filter((item) => item.songId !== songId),
-    });
-  };
+  const playlistSongs = playlist ? playlist.songs : [];
 
   return (
     <div id="setlist-detail-page">
@@ -149,12 +195,21 @@ function SetlistDetail() {
         title="Add Song"
         onCloseRequested={handleCloseModal}
       >
-        <AddSongForm playlistSongs={playlist.songs} onNewSong={addSong} />
+        <AddSongForm
+          playlistSongs={playlistSongs}
+          onNewSong={addSong}
+          isPending={isPending}
+        />
       </Modal>
       <h1>{setlist.name}</h1>
       <p>{setlist.description}</p>
 
       <SetlistInfo setlist={setlist} playlist={playlist} />
+
+      <DeleteSetlistButton
+        onClick={deleteSetlist}
+        isDeleting={isDeletingSetlist}
+      />
 
       <div className="page-header">
         <h2>Songs ({setlist.songs.length})</h2>
@@ -163,14 +218,15 @@ function SetlistDetail() {
 
       <ul className="songs-list">
         {setlist.songs.map((item, index) => {
-          const song = getSongDetails(item.songId);
+          const song = playlistSongs[item.songIndex];
           return song ? (
             <SongCard
-              key={item.songId}
+              key={index}
               song={song}
               index={index}
               notes={item.notes}
-              onDelete={() => deleteSong(item.songId)}
+              onDelete={() => deleteSong(index)}
+              isDeleting={deletingIndex === index}
             />
           ) : null;
         })}

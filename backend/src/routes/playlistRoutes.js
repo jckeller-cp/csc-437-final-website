@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 
-export function registerPlaylistRoutes(app, playlistProvider) {
-  app.get("/api/playlists", (req, res) => {
+export function registerPlaylistRoutes(app, playlistProvider, setlistProvider) {
+  app.get("/api/playlists", async (req, res) => {
     const { username } = req.userInfo || {};
     if (!username) {
       res.status(401).send({
@@ -11,12 +11,11 @@ export function registerPlaylistRoutes(app, playlistProvider) {
       return;
     }
 
-    playlistProvider.getAllPlaylists(username).then((playlists) => {
-      res.json(playlists);
-    });
+    const playlists = await playlistProvider.getAllPlaylists(username);
+    res.json(playlists);
   });
 
-  app.get("/api/playlists/:playlistId", (req, res) => {
+  app.get("/api/playlists/:playlistId", async (req, res) => {
     const { playlistId } = req.params;
 
     const { username } = req.userInfo || {};
@@ -28,32 +27,30 @@ export function registerPlaylistRoutes(app, playlistProvider) {
       return;
     }
 
-    playlistProvider
-      .getPlaylistById(new ObjectId(playlistId))
-      .then((playlist) => {
-        if (playlist) {
-          if (playlist.authorId === username) {
-            res.json(playlist);
-          } else {
-            res.status(403).send({
-              error: "Forbidden",
-              message: "This user does not own this playlist",
-            });
-          }
-        } else {
-          res.status(404).send({
-            error: "Not Found",
-            message: "No playlist with that ID",
-          });
-        }
+    const playlist = await playlistProvider.getPlaylistById(
+      new ObjectId(playlistId),
+    );
+    if (!playlist) {
+      res.status(404).send({
+        error: "Not Found",
+        message: "No playlist with that ID",
       });
+      return;
+    }
+    if (playlist.authorId !== username) {
+      res.status(403).send({
+        error: "Forbidden",
+        message: "This user does not own this playlist",
+      });
+      return;
+    }
+
+    res.json(playlist);
   });
 
   app.patch("/api/playlists/:playlistId", async (req, res) => {
     const { playlistId } = req.params;
-    const { name } = req.body;
-    const { description } = req.body;
-    const { songs } = req.body;
+    const { name, description, songs } = req.body;
 
     const { username } = req.userInfo || {};
     if (!username) {
@@ -72,17 +69,17 @@ export function registerPlaylistRoutes(app, playlistProvider) {
       return;
     }
 
-    const existingPlaylist = await playlistProvider.getPlaylistById(
+    const existing = await playlistProvider.getPlaylistById(
       new ObjectId(playlistId),
     );
-    if (!existingPlaylist) {
+    if (!existing) {
       res.status(404).send({
         error: "Not Found",
         message: "No playlist with that ID",
       });
       return;
     }
-    if (existingPlaylist.authorId !== username) {
+    if (existing.authorId !== username) {
       res.status(403).send({
         error: "Forbidden",
         message: "This user does not own this playlist",
@@ -90,7 +87,6 @@ export function registerPlaylistRoutes(app, playlistProvider) {
       return;
     }
 
-    // patch any fields that are provided
     const updateData = {};
     if (name) updateData.name = name;
     if (description) updateData.description = description;
@@ -103,7 +99,6 @@ export function registerPlaylistRoutes(app, playlistProvider) {
     if (updated) {
       res.json({ success: true });
     } else {
-      // Should never happen I think but just in case
       res.status(404).send({
         error: "Not Found",
         message: "No playlist with that ID",
@@ -112,8 +107,7 @@ export function registerPlaylistRoutes(app, playlistProvider) {
   });
 
   app.post("/api/playlists", async (req, res) => {
-    const { name } = req.body;
-    const { description } = req.body;
+    const { name, description } = req.body;
 
     const { username } = req.userInfo || {};
     if (!username) {
@@ -178,6 +172,7 @@ export function registerPlaylistRoutes(app, playlistProvider) {
       return;
     }
 
+    await setlistProvider.deleteSetlistsByPlaylistId(playlistId);
     await playlistProvider.deletePlaylist(new ObjectId(playlistId));
     res.status(204).send();
   });

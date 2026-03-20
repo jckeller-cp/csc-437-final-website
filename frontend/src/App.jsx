@@ -60,7 +60,7 @@ function App() {
           path={VALID_ROUTES.SETLISTS}
           element={
             <ProtectedRoute authToken={authToken}>
-              <Setlists />
+              <Setlists authToken={authToken} />
             </ProtectedRoute>
           }
         />
@@ -68,7 +68,7 @@ function App() {
           path={VALID_ROUTES.SETLIST_DETAILS}
           element={
             <ProtectedRoute authToken={authToken}>
-              <SetlistDetail />
+              <SetlistDetail authToken={authToken} />
             </ProtectedRoute>
           }
         />
