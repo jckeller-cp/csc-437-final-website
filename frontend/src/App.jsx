@@ -44,7 +44,7 @@ function App() {
           path={VALID_ROUTES.PLAYLISTS}
           element={
             <ProtectedRoute authToken={authToken}>
-              <Route path="/playlists" element={<Playlists />} />
+              <Playlists authToken={authToken} />
             </ProtectedRoute>
           }
         />
@@ -52,7 +52,7 @@ function App() {
           path={VALID_ROUTES.PLAYLIST_DETAILS}
           element={
             <ProtectedRoute authToken={authToken}>
-              <Route path="/playlists/:id" element={<PlaylistDetail />} />
+              <PlaylistDetail authToken={authToken} />
             </ProtectedRoute>
           }
         />
@@ -60,7 +60,7 @@ function App() {
           path={VALID_ROUTES.SETLISTS}
           element={
             <ProtectedRoute authToken={authToken}>
-              <Route path="/setlists" element={<Setlists />} />
+              <Setlists />
             </ProtectedRoute>
           }
         />
@@ -68,7 +68,7 @@ function App() {
           path={VALID_ROUTES.SETLIST_DETAILS}
           element={
             <ProtectedRoute authToken={authToken}>
-              <Route path="/setlists/:id" element={<SetlistDetail />} />
+              <SetlistDetail />
             </ProtectedRoute>
           }
         />
@@ -76,7 +76,7 @@ function App() {
           path={VALID_ROUTES.ACCOUNT}
           element={
             <ProtectedRoute authToken={authToken}>
-              <Route path="/account" element={<Account />} />
+              <Account />
             </ProtectedRoute>
           }
         />

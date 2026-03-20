@@ -28,7 +28,7 @@ function generateAuthToken(username) {
 function trySendAuthTokenResponse(res, tokenPromise) {
   tokenPromise
     .then((token) => {
-      res.status(200).send({ token });
+      res.status(201).send({ token });
     })
     .catch((error) => {
       console.error("Error generating auth token:", error);

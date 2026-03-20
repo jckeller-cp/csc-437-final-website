@@ -1,8 +1,7 @@
-import { useParams, Link } from "react-router-dom";
-import { dummyPlaylists } from "../data/dummyData";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import "./PlaylistDetail.css";
 import Modal from "../components/Modal";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 
 function AddSongButton({ onClick }) {
   return (
@@ -12,15 +11,15 @@ function AddSongButton({ onClick }) {
   );
 }
 
-function DeletePlaylistButton({ onClick }) {
+function DeletePlaylistButton({ onClick, isDeleting }) {
   return (
-    <button className="bad-button" onClick={onClick}>
-      Delete Playlist
+    <button className="bad-button" onClick={onClick} disabled={isDeleting}>
+      {isDeleting ? "Deleting..." : "Delete Playlist"}
     </button>
   );
 }
 
-function AddSongForm({ onNewSong }) {
+function AddSongForm({ onNewSong, isPending }) {
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [duration, setDuration] = useState("");
@@ -66,7 +65,9 @@ function AddSongForm({ onNewSong }) {
   return (
     <form className="add-song-form" onSubmit={handleSubmit} noValidate>
       {errors.title && (
-        <p id="song-title-error" className="form-error">{errors.title}</p>
+        <p id="song-title-error" className="form-error">
+          {errors.title}
+        </p>
       )}
       <label>
         Title
@@ -81,7 +82,9 @@ function AddSongForm({ onNewSong }) {
         />
       </label>
       {errors.artist && (
-        <p id="song-artist-error" className="form-error">{errors.artist}</p>
+        <p id="song-artist-error" className="form-error">
+          {errors.artist}
+        </p>
       )}
       <label>
         Artist
@@ -96,7 +99,9 @@ function AddSongForm({ onNewSong }) {
         />
       </label>
       {errors.duration && (
-        <p id="song-duration-error" className="form-error">{errors.duration}</p>
+        <p id="song-duration-error" className="form-error">
+          {errors.duration}
+        </p>
       )}
       <label>
         Duration
@@ -111,7 +116,9 @@ function AddSongForm({ onNewSong }) {
         />
       </label>
       {errors.bpm && (
-        <p id="song-bpm-error" className="form-error">{errors.bpm}</p>
+        <p id="song-bpm-error" className="form-error">
+          {errors.bpm}
+        </p>
       )}
       <label>
         BPM
@@ -127,7 +134,9 @@ function AddSongForm({ onNewSong }) {
         />
       </label>
       {errors.key && (
-        <p id="song-key-error" className="form-error">{errors.key}</p>
+        <p id="song-key-error" className="form-error">
+          {errors.key}
+        </p>
       )}
       <label>
         Key
@@ -141,14 +150,14 @@ function AddSongForm({ onNewSong }) {
           aria-describedby={errors.key ? "song-key-error" : undefined}
         />
       </label>
-      <button type="submit" className="submit-button">
-        Add Song
+      <button type="submit" className="submit-button" disabled={isPending}>
+        {isPending ? "Adding..." : "Add Song"}
       </button>
     </form>
   );
 }
 
-function SongCard({ song, index, onDelete }) {
+function SongCard({ song, index, onDelete, isDeleting }) {
   return (
     <li className="song-card">
       <div className="song-number">{index + 1}</div>
@@ -161,45 +170,72 @@ function SongCard({ song, index, onDelete }) {
         <span className="song-bpm">{song.bpm} BPM</span>
         <span className="song-key">{song.key}</span>
       </div>
-      <button className="bad-button" onClick={onDelete}>
-        Delete
+      <button className="bad-button" onClick={onDelete} disabled={isDeleting}>
+        {isDeleting ? "Deleting..." : "Delete"}
       </button>
     </li>
   );
 }
 
-function PlaylistDetail() {
-  const { id } = useParams();
-  const initialPlaylist = dummyPlaylists.find((p) => p.id === parseInt(id));
-  const [playlist, setPlaylist] = useState(initialPlaylist);
+function PlaylistDetail({ authToken }) {
+  const { playlistId } = useParams();
+  const [playlist, setPlaylist] = useState(null);
   const [addSongOpen, setAddSongOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [deletingIndex, setDeletingIndex] = useState(null);
+  const [isDeletingPlaylist, setIsDeletingPlaylist] = useState(false);
+  const navigate = useNavigate();
 
-  const handleOpenModal = () => {
-    setAddSongOpen(true);
-  };
+  useEffect(() => {
+    fetch(`/api/playlists/${playlistId}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setPlaylist(data));
+  }, [playlistId, authToken]);
 
-  const handleCloseModal = () => {
-    setAddSongOpen(false);
-  };
-
-  const deleteSong = (songId) => {
-    setPlaylist({
-      ...playlist,
-      songs: playlist.songs.filter((s) => s.id !== songId),
+  const patchSongs = (updatedSongs) => {
+    return fetch(`/api/playlists/${playlistId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ songs: updatedSongs }),
+    }).then((res) => {
+      if (res.ok) setPlaylist((prev) => ({ ...prev, songs: updatedSongs }));
     });
   };
 
+  const handleOpenModal = () => setAddSongOpen(true);
+  const handleCloseModal = () => setAddSongOpen(false);
+
   const addSong = (newSong) => {
-    const newId =
-      playlist.songs.length > 0
-        ? playlist.songs[playlist.songs.length - 1].id + 1
-        : 1;
-    const songToAdd = { id: newId, ...newSong };
-    setPlaylist({ ...playlist, songs: [...playlist.songs, songToAdd] });
-    handleCloseModal();
+    startTransition(async () => {
+      await patchSongs([...playlist.songs, newSong]);
+      handleCloseModal();
+    });
   };
 
-  if (!playlist) {
+  const deleteSong = (index) => {
+    setDeletingIndex(index);
+    const updatedSongs = playlist.songs.filter((_, i) => i !== index);
+    patchSongs(updatedSongs).finally(() => setDeletingIndex(null));
+  };
+
+  const deletePlaylist = () => {
+    setIsDeletingPlaylist(true);
+    fetch(`/api/playlists/${playlistId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${authToken}` },
+    }).then(() => navigate("/playlists"));
+  };
+
+  if (playlist === null) {
+    return <p>Loading playlist...</p>;
+  }
+
+  if (playlist === false) {
     return (
       <div>
         <h2>Playlist Not Found</h2>
@@ -215,12 +251,15 @@ function PlaylistDetail() {
         title="Add Song"
         onCloseRequested={handleCloseModal}
       >
-        <AddSongForm onNewSong={addSong} />
+        <AddSongForm onNewSong={addSong} isPending={isPending} />
       </Modal>
       <h1>{playlist.name}</h1>
       <p>{playlist.description}</p>
 
-      <DeletePlaylistButton onClick={() => {}} />
+      <DeletePlaylistButton
+        onClick={deletePlaylist}
+        isDeleting={isDeletingPlaylist}
+      />
 
       <div className="page-header">
         <h2>Songs ({playlist.songs.length})</h2>
@@ -230,10 +269,11 @@ function PlaylistDetail() {
       <ul className="songs-list">
         {playlist.songs.map((song, index) => (
           <SongCard
-            key={song.id}
+            key={index}
             song={song}
             index={index}
-            onDelete={() => deleteSong(song.id)}
+            onDelete={() => deleteSong(index)}
+            isDeleting={deletingIndex === index}
           />
         ))}
       </ul>
