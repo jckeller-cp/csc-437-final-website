@@ -36,6 +36,13 @@ export class CredentialsProvider {
     return true;
   }
 
+  async getUserByUsername(username) {
+    return this.usersCollection.findOne(
+      { username },
+      { projection: { _id: 0, username: 1, email: 1 } },
+    );
+  }
+
   async verifyPassword(username, password) {
     const existing = await this.credsCollection.findOne({ username });
     if (!existing) {

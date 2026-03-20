@@ -28,7 +28,7 @@ function App() {
           path={VALID_ROUTES.HOME}
           element={
             <ProtectedRoute authToken={authToken}>
-              <Home />
+              <Home authToken={authToken} />
             </ProtectedRoute>
           }
         />
@@ -76,7 +76,7 @@ function App() {
           path={VALID_ROUTES.ACCOUNT}
           element={
             <ProtectedRoute authToken={authToken}>
-              <Account />
+              <Account authToken={authToken} />
             </ProtectedRoute>
           }
         />

@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import { dummyPlaylists, dummySetlists } from "../data/dummyData";
+import { useState, useEffect } from "react";
 import "./Home.css";
 import StatCard from "../components/StatCard";
 
 function HomeSetlistCard({ setlist }) {
   return (
-    <li key={setlist.id} className="home-setlist-card">
-      <Link className="home-setlist-name" to={`/setlists/${setlist.id}`}>
+    <li className="home-setlist-card">
+      <Link className="home-setlist-name" to={`/setlists/${setlist._id}`}>
         {setlist.name}
       </Link>
       <span className="home-setlist-location">{setlist.venue}</span>
@@ -14,15 +14,30 @@ function HomeSetlistCard({ setlist }) {
   );
 }
 
-function Home() {
-  const playlists = dummyPlaylists;
-  const setlists = dummySetlists;
+function Home({ authToken }) {
+  const [playlists, setPlaylists] = useState(null);
+  const [setlists, setSetlists] = useState(null);
+
+  useEffect(() => {
+    const headers = { Authorization: `Bearer ${authToken}` };
+    Promise.all([
+      fetch("/api/playlists", { headers }).then((res) => res.json()),
+      fetch("/api/setlists", { headers }).then((res) => res.json()),
+    ]).then(([playlistData, setlistData]) => {
+      setPlaylists(playlistData);
+      setSetlists(setlistData);
+    });
+  }, [authToken]);
+
+  if (playlists === null || setlists === null) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div className="centered-content">
       <div id="welcome-banner">
         <h1>Welcome to Setlister</h1>
-        <p>Manage your playlists and setlists in one place</p>{" "}
+        <p>Manage your playlists and setlists in one place</p>
       </div>
 
       <section id="quick-stats">
@@ -41,7 +56,7 @@ function Home() {
         <h2>Recent Setlists</h2>
         <ul className="home-setlist-list">
           {setlists.map((setlist) => (
-            <HomeSetlistCard key={setlist.id} setlist={setlist} />
+            <HomeSetlistCard key={setlist._id} setlist={setlist} />
           ))}
         </ul>
       </section>

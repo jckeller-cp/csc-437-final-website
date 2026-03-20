@@ -40,6 +40,28 @@ function trySendAuthTokenResponse(res, tokenPromise) {
 }
 
 export function registerAuthRoutes(app, credentialsProvider) {
+  app.get("/api/users/me", async (req, res) => {
+    const { username } = req.userInfo || {};
+    if (!username) {
+      res.status(401).send({
+        error: "Unauthorized",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const user = await credentialsProvider.getUserByUsername(username);
+    if (!user) {
+      res.status(404).send({
+        error: "Not Found",
+        message: "User not found",
+      });
+      return;
+    }
+
+    res.json(user);
+  });
+
   app.post("/api/users", (req, res) => {
     const { username, email, password } = req.body;
 

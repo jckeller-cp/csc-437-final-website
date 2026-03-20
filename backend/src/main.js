@@ -21,6 +21,7 @@ app.use(express.json());
 app.use(express.static(STATIC_DIR));
 app.use("/api/playlists{/*all}", verifyAuthToken);
 app.use("/api/setlists{/*all}", verifyAuthToken);
+app.use("/api/users/me", verifyAuthToken);
 
 app.get(Object.values(VALID_ROUTES), (req, res) => {
   res.sendFile("index.html", { root: STATIC_DIR });
