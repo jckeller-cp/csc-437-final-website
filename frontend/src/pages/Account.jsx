@@ -115,7 +115,7 @@ function ProfileInfo({ user }) {
   );
 }
 
-function Account({ onLogout }) {
+function Account() {
   const [user, setUser] = useState({
     name: "Fake Person",
     email: "fake.person@email.com",
@@ -165,9 +165,6 @@ function Account({ onLogout }) {
           Edit Profile
         </button>
         <button className="neutral-button">Change Password</button>
-        <button className="bad-button" onClick={onLogout}>
-          Log Out
-        </button>
       </section>
     </div>
   );

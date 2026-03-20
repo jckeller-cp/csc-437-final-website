@@ -1,118 +1,87 @@
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router";
+import { useState } from "react";
 import "./App.css";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
 import Playlists from "./pages/Playlists";
 import Setlists from "./pages/Setlists";
 import Account from "./pages/Account";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import SetlistDetail from "./pages/SetlistDetail";
-import Login from "./pages/Login";
-
-function LoggedOutHeader({ darkMode, onToggleDarkMode }) {
-  return (
-    <header>
-      <nav>
-        <div className="general-links">
-          <Link to="/login">Home</Link>
-        </div>
-        <div className="account-links">
-          <button
-            className="dark-mode-toggle"
-            onClick={onToggleDarkMode}
-            aria-label="Toggle dark mode"
-          >
-            {darkMode ? "Light Mode" : "Dark Mode"}
-          </button>
-        </div>
-      </nav>
-    </header>
-  );
-}
-
-function LoggedInHeader({ darkMode, onToggleDarkMode }) {
-  return (
-    <header>
-      <nav>
-        <div className="general-links">
-          <Link to="/">Home</Link>
-          <Link to="/playlists">Playlists</Link>
-          <Link to="/setlists">Setlists</Link>
-        </div>
-        <div className="account-links">
-          <button
-            className="dark-mode-toggle"
-            onClick={onToggleDarkMode}
-            aria-label="Toggle dark mode"
-          >
-            {darkMode ? "Light Mode" : "Dark Mode"}
-          </button>
-          <Link to="/account">Account</Link>
-        </div>
-      </nav>
-    </header>
-  );
-}
+import { ProtectedRoute } from "./ProtectedRoute";
+import { VALID_ROUTES } from "../../shared/ValidRoutes";
+import { MainLayout } from "./MainLayout";
 
 function App() {
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("darkMode") === "true"
-  );
+  const [authToken, setAuthToken] = useState(null);
+  const navigate = useNavigate();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    () => localStorage.getItem("isLoggedIn") === "true"
-  );
-
-  useEffect(() => {
-    document.body.classList.toggle("dark-mode", darkMode);
-    localStorage.setItem("darkMode", darkMode);
-  }, [darkMode]);
-
-  const handleLogin = () => {
-    localStorage.setItem("isLoggedIn", "true");
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.setItem("isLoggedIn", "false");
-    setIsLoggedIn(false);
-  };
-
-  const toggleDarkMode = () => setDarkMode((prev) => !prev);
-
-  if (!isLoggedIn) {
-    return (
-      <Router>
-        <div className="app">
-          <LoggedOutHeader darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />
-          <main>
-            <Routes>
-              <Route path="/login" element={<Login onLogin={handleLogin} />} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </main>
-        </div>
-      </Router>
-    );
+  function onLogin(token) {
+    setAuthToken(token);
+    navigate("/", { replace: true });
   }
 
   return (
-    <Router>
-      <div className="app">
-        <LoggedInHeader darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/playlists" element={<Playlists />} />
-            <Route path="/playlists/:id" element={<PlaylistDetail />} />
-            <Route path="/setlists" element={<Setlists />} />
-            <Route path="/setlists/:id" element={<SetlistDetail />} />
-            <Route path="/account" element={<Account onLogout={handleLogout} />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <Routes>
+      <Route path="/" element={<MainLayout />}>
+        <Route
+          path={VALID_ROUTES.HOME}
+          element={
+            <ProtectedRoute authToken={authToken}>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={VALID_ROUTES.LOGIN}
+          element={<Login isRegistering={false} onLogin={onLogin} />}
+        />
+        <Route
+          path={VALID_ROUTES.REGISTER}
+          element={<Login isRegistering={true} onLogin={onLogin} />}
+        />
+        <Route
+          path={VALID_ROUTES.PLAYLISTS}
+          element={
+            <ProtectedRoute authToken={authToken}>
+              <Route path="/playlists" element={<Playlists />} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={VALID_ROUTES.PLAYLIST_DETAILS}
+          element={
+            <ProtectedRoute authToken={authToken}>
+              <Route path="/playlists/:id" element={<PlaylistDetail />} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={VALID_ROUTES.SETLISTS}
+          element={
+            <ProtectedRoute authToken={authToken}>
+              <Route path="/setlists" element={<Setlists />} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={VALID_ROUTES.SETLIST_DETAILS}
+          element={
+            <ProtectedRoute authToken={authToken}>
+              <Route path="/setlists/:id" element={<SetlistDetail />} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={VALID_ROUTES.ACCOUNT}
+          element={
+            <ProtectedRoute authToken={authToken}>
+              <Route path="/account" element={<Account />} />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+    </Routes>
   );
 }
 
