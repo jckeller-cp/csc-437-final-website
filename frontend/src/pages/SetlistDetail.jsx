@@ -36,7 +36,7 @@ function DeleteSetlistButton({ onClick, isDeleting }) {
   );
 }
 
-function AddSongForm({ playlistSongs, onNewSong, isPending }) {
+function AddSongForm({ playlistSongs, onNewSong, isPending, submitError }) {
   const [songIndex, setSongIndex] = useState(
     playlistSongs.length > 0 ? "0" : "",
   );
@@ -56,6 +56,7 @@ function AddSongForm({ playlistSongs, onNewSong, isPending }) {
 
   return (
     <form className="add-song-form" onSubmit={handleSubmit}>
+      {submitError && <p className="form-error">{submitError}</p>}
       <label>
         Song
         <select
@@ -117,13 +118,20 @@ function SetlistDetail({ authToken }) {
   const [isPending, startTransition] = useTransition();
   const [deletingIndex, setDeletingIndex] = useState(null);
   const [isDeletingSetlist, setIsDeletingSetlist] = useState(false);
+  const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetch(`/api/setlists/${setlistId}`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
-      .then((res) => (res.ok ? res.json() : false))
+      .then((res) => {
+        if (res.status === 404) return false;
+        if (!res.ok) throw new Error("Failed to load setlist");
+        return res.json();
+      })
       .then((data) => {
         setSetlist(data);
         if (data && data.playlistId) {
@@ -133,7 +141,8 @@ function SetlistDetail({ authToken }) {
             .then((res) => (res.ok ? res.json() : null))
             .then((playlistData) => setPlaylist(playlistData));
         }
-      });
+      })
+      .catch((err) => setError(err.message));
   }, [setlistId, authToken]);
 
   const patchSongs = (updatedSongs) => {
@@ -145,36 +154,65 @@ function SetlistDetail({ authToken }) {
       },
       body: JSON.stringify({ songs: updatedSongs }),
     }).then((res) => {
-      if (res.ok) setSetlist((prev) => ({ ...prev, songs: updatedSongs }));
+      if (!res.ok) throw new Error("Failed to update songs");
+      setSetlist((prev) => ({ ...prev, songs: updatedSongs }));
     });
   };
 
-  const handleOpenModal = () => setAddSongOpen(true);
+  const handleOpenModal = () => {
+    setSubmitError(null);
+    setAddSongOpen(true);
+  };
   const handleCloseModal = () => setAddSongOpen(false);
 
   const addSong = (newItem) => {
+    setSubmitError(null);
     startTransition(async () => {
-      await patchSongs([...setlist.songs, newItem]);
-      handleCloseModal();
+      try {
+        await patchSongs([...setlist.songs, newItem]);
+        handleCloseModal();
+      } catch (err) {
+        setSubmitError(err.message);
+      }
     });
   };
 
   const deleteSong = (index) => {
+    setActionError(null);
     setDeletingIndex(index);
     const updatedSongs = setlist.songs.filter((_, i) => i !== index);
-    patchSongs(updatedSongs).finally(() => setDeletingIndex(null));
+    patchSongs(updatedSongs)
+      .catch((err) => setActionError(err.message))
+      .finally(() => setDeletingIndex(null));
   };
 
   const deleteSetlist = () => {
+    setActionError(null);
     setIsDeletingSetlist(true);
     fetch(`/api/setlists/${setlistId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${authToken}` },
-    }).then(() => navigate("/setlists"));
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to delete setlist");
+        navigate("/setlists");
+      })
+      .catch((err) => {
+        setActionError(err.message);
+        setIsDeletingSetlist(false);
+      });
   };
 
+  if (error) {
+    return (
+      <div className="status-message error">
+        <p>Something went wrong: {error}</p>
+      </div>
+    );
+  }
+
   if (setlist === null) {
-    return <p>Loading setlist...</p>;
+    return <p className="status-message">Loading setlist...</p>;
   }
 
   if (setlist === false) {
@@ -199,12 +237,15 @@ function SetlistDetail({ authToken }) {
           playlistSongs={playlistSongs}
           onNewSong={addSong}
           isPending={isPending}
+          submitError={submitError}
         />
       </Modal>
       <h1>{setlist.name}</h1>
       <p>{setlist.description}</p>
 
       <SetlistInfo setlist={setlist} playlist={playlist} />
+
+      {actionError && <p className="inline-error">{actionError}</p>}
 
       <DeleteSetlistButton
         onClick={deleteSetlist}

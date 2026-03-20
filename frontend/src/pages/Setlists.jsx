@@ -11,7 +11,7 @@ function AddSetlistButton({ onClick }) {
   );
 }
 
-function AddSetlistForm({ onNewSetlist, playlists, isPending }) {
+function AddSetlistForm({ onNewSetlist, playlists, isPending, submitError }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [venue, setVenue] = useState("");
@@ -51,6 +51,7 @@ function AddSetlistForm({ onNewSetlist, playlists, isPending }) {
 
   return (
     <form className="add-setlist-form" onSubmit={handleSubmit} noValidate>
+      {submitError && <p className="form-error">{submitError}</p>}
       {errors.name && (
         <p id="setlist-name-error" className="form-error">{errors.name}</p>
       )}
@@ -157,16 +158,26 @@ function Setlists({ authToken }) {
   const [playlists, setPlaylists] = useState(null);
   const [addSetlistOpen, setAddSetlistOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${authToken}` };
     Promise.all([
-      fetch("/api/setlists", { headers }).then((res) => res.json()),
-      fetch("/api/playlists", { headers }).then((res) => res.json()),
-    ]).then(([setlistData, playlistData]) => {
-      setSetlists(setlistData);
-      setPlaylists(playlistData);
-    });
+      fetch("/api/setlists", { headers }).then((res) => {
+        if (!res.ok) throw new Error("Failed to load setlists");
+        return res.json();
+      }),
+      fetch("/api/playlists", { headers }).then((res) => {
+        if (!res.ok) throw new Error("Failed to load playlists");
+        return res.json();
+      }),
+    ])
+      .then(([setlistData, playlistData]) => {
+        setSetlists(setlistData);
+        setPlaylists(playlistData);
+      })
+      .catch((err) => setError(err.message));
   }, [authToken]);
 
   const getPlaylistName = (playlistId) => {
@@ -174,28 +185,33 @@ function Setlists({ authToken }) {
     return playlist ? playlist.name : "Unknown Playlist";
   };
 
-  const handleOpenModal = () => setAddSetlistOpen(true);
+  const handleOpenModal = () => {
+    setSubmitError(null);
+    setAddSetlistOpen(true);
+  };
   const handleCloseModal = () => setAddSetlistOpen(false);
 
   const addSetlist = ({ name, description, venue, date, playlistId }) => {
+    setSubmitError(null);
     startTransition(async () => {
-      const res = await fetch("/api/setlists", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({ name, description, venue, date, playlistId }),
-      });
-      const created = await res.json();
-      setSetlists((prev) => [...prev, created]);
-      handleCloseModal();
+      try {
+        const res = await fetch("/api/setlists", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ name, description, venue, date, playlistId }),
+        });
+        if (!res.ok) throw new Error("Failed to create setlist");
+        const created = await res.json();
+        setSetlists((prev) => [...prev, created]);
+        handleCloseModal();
+      } catch (err) {
+        setSubmitError(err.message);
+      }
     });
   };
-
-  if (setlists === null || playlists === null) {
-    return <p>Loading setlists...</p>;
-  }
 
   return (
     <div id="setlists-page">
@@ -206,24 +222,32 @@ function Setlists({ authToken }) {
       >
         <AddSetlistForm
           onNewSetlist={addSetlist}
-          playlists={playlists}
+          playlists={playlists || []}
           isPending={isPending}
+          submitError={submitError}
         />
       </Modal>
       <div className="page-header">
         <h1>Setlists</h1>
         <AddSetlistButton onClick={handleOpenModal} />
       </div>
-
-      <div className="setlists-list">
-        {setlists.map((setlist) => (
-          <SetlistCard
-            key={setlist._id}
-            setlist={setlist}
-            playlistName={getPlaylistName(setlist.playlistId)}
-          />
-        ))}
-      </div>
+      {error ? (
+        <div className="status-message error">
+          <p>Something went wrong: {error}</p>
+        </div>
+      ) : setlists === null || playlists === null ? (
+        <p className="status-message">Loading setlists...</p>
+      ) : (
+        <div className="setlists-list">
+          {setlists.map((setlist) => (
+            <SetlistCard
+              key={setlist._id}
+              setlist={setlist}
+              playlistName={getPlaylistName(setlist.playlistId)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

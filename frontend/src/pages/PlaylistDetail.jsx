@@ -19,7 +19,7 @@ function DeletePlaylistButton({ onClick, isDeleting }) {
   );
 }
 
-function AddSongForm({ onNewSong, isPending }) {
+function AddSongForm({ onNewSong, isPending, submitError }) {
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [duration, setDuration] = useState("");
@@ -64,6 +64,7 @@ function AddSongForm({ onNewSong, isPending }) {
 
   return (
     <form className="add-song-form" onSubmit={handleSubmit} noValidate>
+      {submitError && <p className="form-error">{submitError}</p>}
       {errors.title && (
         <p id="song-title-error" className="form-error">
           {errors.title}
@@ -184,14 +185,22 @@ function PlaylistDetail({ authToken }) {
   const [isPending, startTransition] = useTransition();
   const [deletingIndex, setDeletingIndex] = useState(null);
   const [isDeletingPlaylist, setIsDeletingPlaylist] = useState(false);
+  const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetch(`/api/playlists/${playlistId}`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setPlaylist(data));
+      .then((res) => {
+        if (res.status === 404) return false;
+        if (!res.ok) throw new Error("Failed to load playlist");
+        return res.json();
+      })
+      .then((data) => setPlaylist(data))
+      .catch((err) => setError(err.message));
   }, [playlistId, authToken]);
 
   const patchSongs = (updatedSongs) => {
@@ -203,36 +212,65 @@ function PlaylistDetail({ authToken }) {
       },
       body: JSON.stringify({ songs: updatedSongs }),
     }).then((res) => {
-      if (res.ok) setPlaylist((prev) => ({ ...prev, songs: updatedSongs }));
+      if (!res.ok) throw new Error("Failed to update songs");
+      setPlaylist((prev) => ({ ...prev, songs: updatedSongs }));
     });
   };
 
-  const handleOpenModal = () => setAddSongOpen(true);
+  const handleOpenModal = () => {
+    setSubmitError(null);
+    setAddSongOpen(true);
+  };
   const handleCloseModal = () => setAddSongOpen(false);
 
   const addSong = (newSong) => {
+    setSubmitError(null);
     startTransition(async () => {
-      await patchSongs([...playlist.songs, newSong]);
-      handleCloseModal();
+      try {
+        await patchSongs([...playlist.songs, newSong]);
+        handleCloseModal();
+      } catch (err) {
+        setSubmitError(err.message);
+      }
     });
   };
 
   const deleteSong = (index) => {
+    setActionError(null);
     setDeletingIndex(index);
     const updatedSongs = playlist.songs.filter((_, i) => i !== index);
-    patchSongs(updatedSongs).finally(() => setDeletingIndex(null));
+    patchSongs(updatedSongs)
+      .catch((err) => setActionError(err.message))
+      .finally(() => setDeletingIndex(null));
   };
 
   const deletePlaylist = () => {
+    setActionError(null);
     setIsDeletingPlaylist(true);
     fetch(`/api/playlists/${playlistId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${authToken}` },
-    }).then(() => navigate("/playlists"));
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to delete playlist");
+        navigate("/playlists");
+      })
+      .catch((err) => {
+        setActionError(err.message);
+        setIsDeletingPlaylist(false);
+      });
   };
 
+  if (error) {
+    return (
+      <div className="status-message error">
+        <p>Something went wrong: {error}</p>
+      </div>
+    );
+  }
+
   if (playlist === null) {
-    return <p>Loading playlist...</p>;
+    return <p className="status-message">Loading playlist...</p>;
   }
 
   if (playlist === false) {
@@ -251,10 +289,16 @@ function PlaylistDetail({ authToken }) {
         title="Add Song"
         onCloseRequested={handleCloseModal}
       >
-        <AddSongForm onNewSong={addSong} isPending={isPending} />
+        <AddSongForm
+          onNewSong={addSong}
+          isPending={isPending}
+          submitError={submitError}
+        />
       </Modal>
       <h1>{playlist.name}</h1>
       <p>{playlist.description}</p>
+
+      {actionError && <p className="inline-error">{actionError}</p>}
 
       <DeletePlaylistButton
         onClick={deletePlaylist}

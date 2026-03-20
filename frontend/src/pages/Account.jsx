@@ -17,22 +17,42 @@ function Account({ authToken }) {
   const [user, setUser] = useState(null);
   const [playlistCount, setPlaylistCount] = useState(null);
   const [setlistCount, setSetlistCount] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${authToken}` };
     Promise.all([
-      fetch("/api/users/me", { headers }).then((res) => res.json()),
-      fetch("/api/playlists", { headers }).then((res) => res.json()),
-      fetch("/api/setlists", { headers }).then((res) => res.json()),
-    ]).then(([userData, playlists, setlists]) => {
-      setUser(userData);
-      setPlaylistCount(playlists.length);
-      setSetlistCount(setlists.length);
-    });
+      fetch("/api/users/me", { headers }).then((res) => {
+        if (!res.ok) throw new Error("Failed to load account info");
+        return res.json();
+      }),
+      fetch("/api/playlists", { headers }).then((res) => {
+        if (!res.ok) throw new Error("Failed to load playlists");
+        return res.json();
+      }),
+      fetch("/api/setlists", { headers }).then((res) => {
+        if (!res.ok) throw new Error("Failed to load setlists");
+        return res.json();
+      }),
+    ])
+      .then(([userData, playlists, setlists]) => {
+        setUser(userData);
+        setPlaylistCount(playlists.length);
+        setSetlistCount(setlists.length);
+      })
+      .catch((err) => setError(err.message));
   }, [authToken]);
 
+  if (error) {
+    return (
+      <div className="status-message error">
+        <p>Something went wrong: {error}</p>
+      </div>
+    );
+  }
+
   if (user === null) {
-    return <p>Loading...</p>;
+    return <p className="status-message">Loading account...</p>;
   }
 
   return (

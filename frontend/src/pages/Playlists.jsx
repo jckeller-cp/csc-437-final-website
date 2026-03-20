@@ -11,7 +11,7 @@ function AddPlaylistButton({ onClick }) {
   );
 }
 
-function AddPlaylistForm({ onNewPlaylist }) {
+function AddPlaylistForm({ onNewPlaylist, submitError }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [errors, setErrors] = useState({});
@@ -41,6 +41,7 @@ function AddPlaylistForm({ onNewPlaylist }) {
 
   return (
     <form className="add-playlist-form" onSubmit={handleSubmit} noValidate>
+      {submitError && <p className="form-error">{submitError}</p>}
       {errors.name && (
         <p id="playlist-name-error" className="form-error">
           {errors.name}
@@ -100,16 +101,23 @@ function PlaylistCard({ playlist }) {
 function Playlists({ authToken }) {
   const [playlists, setPlaylists] = useState(null);
   const [addPlaylistOpen, setAddPlaylistOpen] = useState(false);
+  const [error, setError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
 
   useEffect(() => {
     fetch("/api/playlists", {
       headers: { Authorization: `Bearer ${authToken}` },
     })
-      .then((res) => res.json())
-      .then((data) => setPlaylists(data));
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load playlists");
+        return res.json();
+      })
+      .then((data) => setPlaylists(data))
+      .catch((err) => setError(err.message));
   }, [authToken]);
 
   const handleOpenModal = () => {
+    setSubmitError(null);
     setAddPlaylistOpen(true);
   };
 
@@ -118,6 +126,7 @@ function Playlists({ authToken }) {
   };
 
   const addPlaylist = ({ name, description }) => {
+    setSubmitError(null);
     return fetch("/api/playlists", {
       method: "POST",
       headers: {
@@ -126,12 +135,24 @@ function Playlists({ authToken }) {
       },
       body: JSON.stringify({ name, description }),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create playlist");
+        return res.json();
+      })
       .then((created) => {
         setPlaylists((prev) => [...prev, created]);
         handleCloseModal();
-      });
+      })
+      .catch((err) => setSubmitError(err.message));
   };
+
+  if (error) {
+    return (
+      <div className="status-message error">
+        <p>Something went wrong: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div id="playlists-page">
@@ -140,14 +161,17 @@ function Playlists({ authToken }) {
         title="New Playlist"
         onCloseRequested={handleCloseModal}
       >
-        <AddPlaylistForm onNewPlaylist={addPlaylist} />
+        <AddPlaylistForm
+          onNewPlaylist={addPlaylist}
+          submitError={submitError}
+        />
       </Modal>
       <div className="page-header">
         <h1>Playlists</h1>
         <AddPlaylistButton onClick={handleOpenModal} />
       </div>
       {playlists === null ? (
-        <p>Loading playlists...</p>
+        <p className="status-message">Loading playlists...</p>
       ) : (
         <ul className="playlists-list">
           {playlists.map((playlist) => (

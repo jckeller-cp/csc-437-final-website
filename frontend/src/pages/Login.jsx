@@ -107,7 +107,7 @@ function Login({ isRegistering, onLogin }) {
           )}
 
           {errorMessage && (
-            <p id={errorId} role="alert" className="LoginPage-error">
+            <p id={errorId} role="alert" className="form-error">
               {errorMessage}
             </p>
           )}
